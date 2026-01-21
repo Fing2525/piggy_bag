@@ -8,6 +8,7 @@ module tt_um_piggy_top (
     input  wire        Input_2,
     input  wire        Input_3,
     input  wire        LCD_0,
+    input  wire        ena,
 
     output wire        o_Tx_Active,
     output wire        o_Tx_Done,
