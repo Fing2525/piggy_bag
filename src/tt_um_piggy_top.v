@@ -62,7 +62,7 @@ module tt_um_piggy_top (
     debouncer u_deb1 (.clk(clk), .Input(Input_0), .Output(deb1));
     debouncer u_deb2 (.clk(clk), .Input(Input_1), .Output(deb2));
     debouncer u_deb3 (.clk(clk), .Input(Input_2), .Output(deb3));
-
+    debouncer u_deb4 (.clk(clk), .Input(Input_3), .Output(deb4));
 
     // ------------------------------------------------------------
     // Counters
@@ -75,7 +75,12 @@ module tt_um_piggy_top (
     // ------------------------------------------------------------
     // Edge detector
     // ------------------------------------------------------------
- 
+    edge_detector u_edge (
+        .clk(clk),
+        .rst(reset),
+        .Input(deb4),
+        .Output(edge_out)
+    );
 
     // ------------------------------------------------------------
     // Num to ASCII
@@ -96,6 +101,11 @@ module tt_um_piggy_top (
         .output1(or4_out)
     );
 
+    orgate_2input u_or2 (
+        .input1(edge_out),
+        .input2(or4_out),
+        .output1(start_sending)
+    );
 
     // ------------------------------------------------------------
     // UART TX FSM
