@@ -2,7 +2,7 @@
 
 module tt_um_piggy_top (
     input  wire        clk,
-    input  wire        reset_n,   // active-low reset
+    input  wire        rst_n,   // active-low reset
     input  wire        Input_0,
     input  wire        Input_1,
     input  wire        Input_2,
@@ -18,7 +18,7 @@ module tt_um_piggy_top (
     // ------------------------------------------------------------
     // Internal wires
     // ------------------------------------------------------------
-    wire reset = reset_n;
+    wire reset = rst_n;
 
     wire [7:0] amount0, amount1, amount2, amount3;
     wire change0, change1, change2, change3;
