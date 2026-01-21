@@ -9,12 +9,13 @@ You can also include images in this folder and reference them in the markdown. E
 
 ## How it works
 
-Explain how your project works
+description: "A piggy bank coin counter that detects and counts four types of coins: 10, 5, 2, and 1 baht.then show the amount of each type of coin via uart tx"
+
 
 ## How to test
 
-Explain how to use your project
+let input high and read the value from uart tx.if the value from uart tx match the amount of input high pulse then the circuit is valid.
 
 ## External hardware
 
-List external hardware used in your project (e.g. PMOD, LED display, etc), if any
+brightness sensor button and switch
