@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module piggy_bank_top (
+module tt_um_piggy_top (
     input  wire        clk,
     input  wire        reset_n,   // active-low reset
     input  wire        Input_0,
