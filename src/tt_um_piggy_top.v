@@ -15,7 +15,6 @@ module tt_um_piggy_top (
     // ------------------------------------------------------------
     // Required: drive ALL outputs
     // ------------------------------------------------------------
-    assign uo_out  = 8'b0;
     assign uio_out = 8'b0;
     assign uio_oe  = 8'b0;
 
