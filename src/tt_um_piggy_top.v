@@ -25,9 +25,6 @@ module tt_um_piggy_top (
     wire _unused_ena = ena;
     wire _unused_uio = |uio_in;
     // ------------------------------------------------------------
-    // Unused bidirectional pins
-    // ------------------------------------------------------------
-    assign uio = 8'b0;
 
     // ------------------------------------------------------------
     // Input mapping (from Tiny Tapeout pins)
