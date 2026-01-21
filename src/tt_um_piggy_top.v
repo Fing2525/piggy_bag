@@ -1,25 +1,34 @@
 `timescale 1ns / 1ps
 
 module tt_um_piggy_top (
-    input  wire        clk,
-    input  wire        rst_n,   // active-low reset
-    input  wire        Input_0,
-    input  wire        Input_1,
-    input  wire        Input_2,
-    input  wire        Input_3,
-    input  wire        LCD_0,
-    input  wire        ena,
-
-    output wire        o_Tx_Active,
-    output wire        o_Tx_Done,
-    output wire        o_Tx_Serial
+    input  wire [7:0] ui_in,
+    output wire [7:0] uo_out,
+    inout  wire [7:0] uio,
+    input  wire       clk,
+    input  wire       rst_n,
+    input  wire       ena
 );
+
+    // ------------------------------------------------------------
+    // Unused bidirectional pins
+    // ------------------------------------------------------------
+    assign uio = 8'b0;
+
+    // ------------------------------------------------------------
+    // Input mapping (from Tiny Tapeout pins)
+    // ------------------------------------------------------------
+    wire Input_0 = ui_in[2];
+    wire Input_1 = ui_in[3];
+    wire Input_2 = ui_in[4];
+    wire Input_3 = ui_in[5];
+    wire LCD_0   = ui_in[6];
+
+    // active-low reset
+    wire reset = rst_n;
 
     // ------------------------------------------------------------
     // Internal wires
     // ------------------------------------------------------------
-    wire reset = rst_n;
-
     wire [7:0] amount0, amount1, amount2, amount3;
     wire change0, change1, change2, change3;
 
@@ -30,6 +39,10 @@ module tt_um_piggy_top (
 
     wire or4_out;
     wire start_sending;
+
+    wire o_Tx_Active;
+    wire o_Tx_Done;
+    wire o_Tx_Serial;
 
     // ------------------------------------------------------------
     // Debouncers
@@ -100,5 +113,13 @@ module tt_um_piggy_top (
         .o_Tx_Done   (o_Tx_Done),
         .o_Tx_Serial (o_Tx_Serial)
     );
+
+    // ------------------------------------------------------------
+    // Output mapping (to Tiny Tapeout pins)
+    // ------------------------------------------------------------
+    assign uo_out[0] = o_Tx_Active;
+    assign uo_out[1] = o_Tx_Done;
+    assign uo_out[2] = o_Tx_Serial;
+    assign uo_out[7:3] = 5'b0;
 
 endmodule
