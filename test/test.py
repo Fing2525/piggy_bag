@@ -6,16 +6,19 @@ from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge, Timer
 from cocotb.triggers import ClockCycles
 
-async def timeout():
-    await Timer(100, "ms")
-    raise cocotb.result.TestFailure("Simulation timeout")
 
-cocotb.start_soon(timeout())
+
 
 
 @cocotb.test()
 async def test_project(dut):
     dut._log.info("Start")
+
+    async def timeout():
+        await Timer(100, "ms")
+        raise cocotb.result.TestFailure("Simulation timeout")
+
+    cocotb.start_soon(timeout())
 
     # Set the clock period to 10 us (100 KHz)
     clock = Clock(dut.clk, 10, unit="us")
