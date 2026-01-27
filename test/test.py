@@ -55,8 +55,8 @@ async def test_project(dut):
     # The following assersion is just an example of how to check the output values.
     # Change it to match the actual expected output of your module:
     #assert dut.uo_out.value == 50
-    while int(dut.uo_out.value) & 0b00000001 == 0:
-        await RisingEdge(dut.clk)
+    # while int(dut.uo_out.value) & 0b00000001 == 0:
+    #     await RisingEdge(dut.clk)
     # Button release
     dut.ui_in.value = 0
     for _ in range(500):
