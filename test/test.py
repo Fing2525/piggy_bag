@@ -6,7 +6,7 @@ from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge, ClockCycles
 
 UART_TX_BIT = 2
-CLK_PERIOD_US = 10   # 100 kHz
+CLK_PERIOD_US = 1   # 100 MHz
 
 
 @cocotb.test()
@@ -16,7 +16,7 @@ async def test_project(dut):
     # ------------------------------------------------------------
     # Clock
     # ------------------------------------------------------------
-    clock = Clock(dut.clk, CLK_PERIOD_US, unit="us")
+    clock = Clock(dut.clk, CLK_PERIOD_US, unit="ns")
     cocotb.start_soon(clock.start())
 
     # ------------------------------------------------------------
