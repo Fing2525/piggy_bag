@@ -22,7 +22,7 @@ async def test_project(dut):
     # -------------------------
     # Clock: 100 kHz
     # -------------------------
-    clock = Clock(dut.clk, 10, unit="us")
+    clock = Clock(dut.clk, 1, unit="ns")
     cocotb.start_soon(clock.start())
 
     # -------------------------
