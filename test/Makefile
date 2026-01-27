@@ -6,7 +6,18 @@ SIM ?= icarus
 FST ?= -fst # Use more efficient FST format
 TOPLEVEL_LANG ?= verilog
 SRC_DIR = $(PWD)/../src
-PROJECT_SOURCES = project.v
+PROJECT_SOURCES = VERILOG_SOURCES = \
+  ../src/project.v \
+  ../src/debouncer.v \
+  ../src/Counter8bit.v \
+  ../src/edge_detector.v \
+  ../src/numtoascii.v \
+  ../src/orgate_4input.v \
+  ../src/orgate_2input.v \
+  ../src/uart_tx_fsm.v \
+  ../src/uart_rom.v \
+  ../src/uart_tx_phy.v
+
 
 ifneq ($(GATES),yes)
 
