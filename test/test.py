@@ -3,11 +3,10 @@
 
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import RisingEdge, ClockCycles, Timer
+from cocotb.triggers import RisingEdge, ClockCycles
 
-
-UART_TX_BIT = 2      # uo_out[2]
-CLK_PERIOD_US = 10   # 100 kHz clock
+UART_TX_BIT = 2
+CLK_PERIOD_US = 10   # 100 kHz
 
 
 @cocotb.test()
@@ -23,53 +22,55 @@ async def test_project(dut):
     # ------------------------------------------------------------
     # Reset (ACTIVE HIGH)
     # ------------------------------------------------------------
-    dut._log.info("Apply reset")
-
     dut.ena.value = 1
     dut.ui_in.value = 0
     dut.uio_in.value = 0
 
-    dut.rst_n.value = 1   # ACTIVE HIGH reset
+    dut.rst_n.value = 1   # reset asserted
     await ClockCycles(dut.clk, 20)
 
-    dut.rst_n.value = 0   # release reset
+    dut.rst_n.value = 0   # reset released
     await ClockCycles(dut.clk, 50)
 
     dut._log.info("Reset released")
 
     # ------------------------------------------------------------
-    # Wait until UART TX becomes resolvable & idle (HIGH)
+    # Wait for UART idle (TX = 1)
     # ------------------------------------------------------------
     dut._log.info("Waiting for UART idle")
 
     while True:
         await RisingEdge(dut.clk)
-        tx = dut.uo_out[UART_TX_BIT].value
 
-        if tx.is_resolvable and tx.integer == 1:
+        if not dut.uo_out.value.is_resolvable:
+            continue
+
+        tx_bit = (dut.uo_out.value.integer >> UART_TX_BIT) & 1
+        if tx_bit == 1:
             break
 
     dut._log.info("UART idle detected")
 
     # ------------------------------------------------------------
-    # Simulate button press (debounced input)
+    # Press button (debounced input)
     # ------------------------------------------------------------
-    dut._log.info("Press button")
     dut.ui_in.value = 0b00000100
-
     await ClockCycles(dut.clk, 400000)
 
     # ------------------------------------------------------------
-    # Wait for UART START BIT (TX goes LOW)
+    # Wait for UART start bit (TX = 0)
     # ------------------------------------------------------------
     dut._log.info("Waiting for UART start bit")
 
-    timeout_cycles = 20000
-    for _ in range(timeout_cycles):
+    timeout = 20000
+    for _ in range(timeout):
         await RisingEdge(dut.clk)
-        tx = dut.uo_out[UART_TX_BIT].value
 
-        if tx.is_resolvable and tx.integer == 0:
+        if not dut.uo_out.value.is_resolvable:
+            continue
+
+        tx_bit = (dut.uo_out.value.integer >> UART_TX_BIT) & 1
+        if tx_bit == 0:
             dut._log.info("UART start bit detected")
             break
     else:
@@ -78,9 +79,7 @@ async def test_project(dut):
     # ------------------------------------------------------------
     # Release button
     # ------------------------------------------------------------
-    dut._log.info("Release button")
     dut.ui_in.value = 0
-
     await ClockCycles(dut.clk, 500)
 
     dut._log.info("=== TEST PASSED ===")
