@@ -58,11 +58,11 @@ module tt_um_piggy_top (
     // ------------------------------------------------------------
     // Debouncers
     // ------------------------------------------------------------
-    debouncer u_deb0 (.clk(clk), .Input(LCD_0),  .Output(deb0));
-    debouncer u_deb1 (.clk(clk), .Input(Input_0), .Output(deb1));
-    debouncer u_deb2 (.clk(clk), .Input(Input_1), .Output(deb2));
-    debouncer u_deb3 (.clk(clk), .Input(Input_2), .Output(deb3));
-    debouncer u_deb4 (.clk(clk), .Input(Input_3), .Output(deb4));
+    debouncer u_deb0 (.clk(clk), .Input(LCD_0),  .Output(deb0), .rst_n(reset));
+    debouncer u_deb1 (.clk(clk), .Input(Input_0), .Output(deb1), .rst_n(reset));
+    debouncer u_deb2 (.clk(clk), .Input(Input_1), .Output(deb2), .rst_n(reset));
+    debouncer u_deb3 (.clk(clk), .Input(Input_2), .Output(deb3), .rst_n(reset));
+    debouncer u_deb4 (.clk(clk), .Input(Input_3), .Output(deb4), .rst_n(reset));
 
     // ------------------------------------------------------------
     // Counters

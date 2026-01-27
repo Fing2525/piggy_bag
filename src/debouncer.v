@@ -25,6 +25,7 @@ module debouncer #(
    )(
     input wire  Input,
     input wire  clk,
+    input wire  rst_n,
     output  reg Output = 0
 
     );
@@ -32,7 +33,13 @@ module debouncer #(
     reg [COUNTER_BITS:0] counter = 0;
     
     always@(posedge clk) begin
-        if(Input!=Output )begin
+        if(rst_n)begin
+
+            counter <= 0;
+            Output <= 0;
+
+        end
+        else if(Input!=Output )begin
             if(counter < (DELAY-2))counter <= counter + 1'b1;
             if(counter >= (DELAY-2))begin
                 Output <= Input;
