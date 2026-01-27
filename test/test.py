@@ -61,7 +61,7 @@ async def test_project(dut):
     # ------------------------------------------------------------
     dut._log.info("Applying input stimulus")
     dut.ui_in.value = 0b00000100
-    await ClockCycles(dut.clk, 400)
+    await ClockCycles(dut.clk, 400000)
     dut.ui_in.value = 0
 
     # ------------------------------------------------------------
