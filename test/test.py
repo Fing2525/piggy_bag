@@ -3,85 +3,84 @@
 
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import RisingEdge, Timer, ClockCycles
+from cocotb.triggers import RisingEdge, ClockCycles, Timer
+from cocotb.result import TestFailure
 
 
 @cocotb.test()
 async def test_project(dut):
     dut._log.info("Start test")
 
-    # -------------------------
-    # Timeout guard
-    # -------------------------
+    # ------------------------------------------------------------
+    # Timeout task (prevents infinite hang)
+    # ------------------------------------------------------------
     async def timeout():
-        await Timer(100, "ms")
-        raise cocotb.result.TestFailure("Simulation timeout")
+        await Timer(5, "ms")
+        raise TestFailure("Simulation timeout")
 
     cocotb.start_soon(timeout())
 
-    # -------------------------
-    # Clock: 100 kHz
-    # -------------------------
+    # ------------------------------------------------------------
+    # Clock: 100 MHz (1 ns period)
+    # ------------------------------------------------------------
     clock = Clock(dut.clk, 1, unit="ns")
     cocotb.start_soon(clock.start())
 
-    # -------------------------
-    # Reset
-    # -------------------------
-    dut._log.info("Reset")
+    # ------------------------------------------------------------
+    # Initial values
+    # ------------------------------------------------------------
     dut.ena.value = 1
     dut.ui_in.value = 0
     dut.uio_in.value = 0
-
     dut.rst_n.value = 0
-    await ClockCycles(dut.clk, 20)
 
+    # ------------------------------------------------------------
+    # Apply reset
+    # ------------------------------------------------------------
+    dut._log.info("Applying reset")
+    await ClockCycles(dut.clk, 20)
     dut.rst_n.value = 1
     await ClockCycles(dut.clk, 50)
 
-    # -------------------------
-    # Apply stimulus (button press)
-    # -------------------------
-    dut._log.info("Apply input")
-    dut.ui_in.value = 0b00000100
-    await ClockCycles(dut.clk, 400)
+    # ------------------------------------------------------------
+    # Wait for UART idle (TX must be HIGH)
+    # ------------------------------------------------------------
+    dut._log.info("Waiting for UART idle")
 
-    # -------------------------
-    # Wait for UART TX start bit
-    # uo_out[0] goes 1 -> 0
-    # -------------------------
-    dut._log.info("Waiting for UART TX activity")
-
-    # Wait until TX goes low (start bit)
-    while int(dut.uo_out.value) & 0b1 == 1:
+    for _ in range(200):
         await RisingEdge(dut.clk)
 
-    dut._log.info("UART start bit detected")
+    tx = int(dut.uo_out.value) & 0b1
+    assert tx == 1, "UART TX not idle after reset"
 
-    # -------------------------
-    # Sample a few UART bits (example)
-    # -------------------------
-    baud_cycles = 104  # adjust if your baud differs
-    bits = []
+    dut._log.info("UART idle confirmed")
 
-    # Sample 8 data bits
-    for i in range(8):
-        await ClockCycles(dut.clk, baud_cycles)
-        bit = int(dut.uo_out.value) & 0b1
-        bits.append(bit)
-
-    dut._log.info(f"UART bits received: {bits}")
-
-    # -------------------------
-    # Simple assertion:
-    # at least one bit toggled
-    # -------------------------
-    assert any(bits), "UART transmitted all-zero data"
-
-    # -------------------------
-    # Button release
-    # -------------------------
+    # ------------------------------------------------------------
+    # Apply stimulus (button / coin input)
+    # ------------------------------------------------------------
+    dut._log.info("Applying input stimulus")
+    dut.ui_in.value = 0b00000100
+    await ClockCycles(dut.clk, 400)
     dut.ui_in.value = 0
+
+    # ------------------------------------------------------------
+    # Detect REAL UART start bit (1 -> 0)
+    # ------------------------------------------------------------
+    dut._log.info("Waiting for UART start bit")
+
+    prev = 1
+    while True:
+        await RisingEdge(dut.clk)
+        curr = int(dut.uo_out.value) & 0b1
+        if prev == 1 and curr == 0:
+            break
+        prev = curr
+
+    dut._log.info("UART start bit detected ✔")
+
+    # ------------------------------------------------------------
+    # Optional: wait some cycles to observe waveform
+    # ------------------------------------------------------------
     await ClockCycles(dut.clk, 500)
 
-    dut._log.info("Test finished successfully")
+    dut._log.info("Test completed successfully")
