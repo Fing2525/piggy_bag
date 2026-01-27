@@ -34,8 +34,14 @@ async def test_project(dut):
     dut._log.info("Test project behavior")
 
     # Set the input values you want to test
-    dut.ui_in.value = 20
-    dut.uio_in.value = 30
+        dut.ui_in.value = 0b00000001
+    for _ in range(500):
+        await RisingEdge(dut.clk)
+
+    # Button release
+    dut.ui_in.value = 0
+    for _ in range(500):
+        await RisingEdge(dut.clk)
 
     # Wait for one clock cycle to see the output values
     await ClockCycles(dut.clk, 1)
