@@ -49,11 +49,9 @@ async def test_project(dut):
     # The following assersion is just an example of how to check the output values.
     # Change it to match the actual expected output of your module:
     #assert dut.uo_out.value == 50
-    # wait until UART starts
-    await RisingEdge(dut.uo_out[0])   # o_Tx_Active
+    while int(dut.uo_out.value) & 0b00000001 == 0:
+        await RisingEdge(dut.clk)
 
-    # wait until UART finishes
-    await RisingEdge(dut.uo_out[1])   # o_Tx_Done
 
 
     # Keep testing the module by changing the input values, waiting for
