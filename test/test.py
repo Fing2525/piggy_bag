@@ -40,6 +40,7 @@ async def test_project(dut):
     await ClockCycles(dut.clk, 20)
     dut.rst_n.value = 1
     await ClockCycles(dut.clk, 50)
+    dut.rst_n.value = 0
 
     # ------------------------------------------------------------
     # Ensure UART idle (TX must be HIGH)
