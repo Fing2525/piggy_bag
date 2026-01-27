@@ -45,7 +45,7 @@ async def test_project(dut):
         if not dut.uo_out.value.is_resolvable:
             continue
 
-        tx_bit = (dut.uo_out.value.integer >> UART_TX_BIT) & 1
+        tx_bit = (dut.uo_out.value.to_unsigned() >> UART_TX_BIT) & 1
         if tx_bit == 1:
             break
 
@@ -69,7 +69,7 @@ async def test_project(dut):
         if not dut.uo_out.value.is_resolvable:
             continue
 
-        tx_bit = (dut.uo_out.value.integer >> UART_TX_BIT) & 1
+        tx_bit = (dut.uo_out.value.to_unsigned() >> UART_TX_BIT) & 1
         if tx_bit == 0:
             dut._log.info("UART start bit detected")
             break
