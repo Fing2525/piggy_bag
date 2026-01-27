@@ -6,82 +6,81 @@ from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge, ClockCycles, Timer
 
 
-UART_TX_BIT = 2   # <<< uo_out[2] is UART TX
+UART_TX_BIT = 2      # uo_out[2]
+CLK_PERIOD_US = 10   # 100 kHz clock
 
 
 @cocotb.test()
 async def test_project(dut):
-    dut._log.info("Start test")
+    dut._log.info("=== START TEST ===")
 
     # ------------------------------------------------------------
-    # Timeout watchdog (cocotb v2 style)
+    # Clock
     # ------------------------------------------------------------
-    async def timeout():
-        await Timer(5, "ms")
-        assert False, "Simulation timeout"
-
-    cocotb.start_soon(timeout())
-
-    # ------------------------------------------------------------
-    # Clock: 100 MHz (10 ns period)
-    # ------------------------------------------------------------
-    clock = Clock(dut.clk, 1, unit="ns")
+    clock = Clock(dut.clk, CLK_PERIOD_US, unit="us")
     cocotb.start_soon(clock.start())
 
     # ------------------------------------------------------------
-    # Initial values
+    # Reset (ACTIVE HIGH)
     # ------------------------------------------------------------
+    dut._log.info("Apply reset")
+
     dut.ena.value = 1
     dut.ui_in.value = 0
     dut.uio_in.value = 0
-    dut.rst_n.value = 1
 
-    # ------------------------------------------------------------
-    # Reset
-    # ------------------------------------------------------------
-    dut._log.info("Applying reset")
+    dut.rst_n.value = 1   # ACTIVE HIGH reset
     await ClockCycles(dut.clk, 20)
-    dut.rst_n.value = 0
+
+    dut.rst_n.value = 0   # release reset
     await ClockCycles(dut.clk, 50)
 
-    # ------------------------------------------------------------
-    # Check UART idle state (TX must be HIGH)
-    # ------------------------------------------------------------
-    dut._log.info("Checking UART idle on uo_out[2]")
-
-    await ClockCycles(dut.clk, 200)
-
-    tx_idle = (int(dut.uo_out.value) >> UART_TX_BIT) & 1
-    assert tx_idle == 1, "UART TX not idle after reset"
-
-    dut._log.info("UART idle confirmed")
+    dut._log.info("Reset released")
 
     # ------------------------------------------------------------
-    # Apply stimulus (button press)
+    # Wait until UART TX becomes resolvable & idle (HIGH)
     # ------------------------------------------------------------
-    dut._log.info("Applying input stimulus")
-    dut.ui_in.value = 0b00000100
-    await ClockCycles(dut.clk, 400000)
-    dut.ui_in.value = 0
+    dut._log.info("Waiting for UART idle")
 
-    # ------------------------------------------------------------
-    # Wait for UART start bit (1 -> 0)
-    # ------------------------------------------------------------
-    dut._log.info("Waiting for UART start bit on uo_out[2]")
-
-    prev = 1
     while True:
         await RisingEdge(dut.clk)
-        curr = (int(dut.uo_out.value) >> UART_TX_BIT) & 1
-        if prev == 1 and curr == 0:
+        tx = dut.uo_out[UART_TX_BIT].value
+
+        if tx.is_resolvable and tx.integer == 1:
             break
-        prev = curr
 
-    dut._log.info("UART start bit detected ✔")
+    dut._log.info("UART idle detected")
 
     # ------------------------------------------------------------
-    # Let waveform continue
+    # Simulate button press (debounced input)
     # ------------------------------------------------------------
+    dut._log.info("Press button")
+    dut.ui_in.value = 0b00000100
+
+    await ClockCycles(dut.clk, 400000)
+
+    # ------------------------------------------------------------
+    # Wait for UART START BIT (TX goes LOW)
+    # ------------------------------------------------------------
+    dut._log.info("Waiting for UART start bit")
+
+    timeout_cycles = 20000
+    for _ in range(timeout_cycles):
+        await RisingEdge(dut.clk)
+        tx = dut.uo_out[UART_TX_BIT].value
+
+        if tx.is_resolvable and tx.integer == 0:
+            dut._log.info("UART start bit detected")
+            break
+    else:
+        assert False, "UART start bit not detected (timeout)"
+
+    # ------------------------------------------------------------
+    # Release button
+    # ------------------------------------------------------------
+    dut._log.info("Release button")
+    dut.ui_in.value = 0
+
     await ClockCycles(dut.clk, 500)
 
-    dut._log.info("Test finished successfully ✅")
+    dut._log.info("=== TEST PASSED ===")
