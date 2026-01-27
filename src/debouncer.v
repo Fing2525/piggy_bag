@@ -25,7 +25,7 @@ module debouncer #(
    )(
     input wire  Input,
     input wire  clk,
-    output  reg Output
+    output  reg Output = 0
 
     );
     localparam COUNTER_BITS = $clog2(DELAY);
