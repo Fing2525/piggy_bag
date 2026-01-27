@@ -108,7 +108,7 @@ module tb;
         #5_000_000;
 
         $display("Simulation done");
-        $finish;
+        //$finish;
     end
 
 endmodule
