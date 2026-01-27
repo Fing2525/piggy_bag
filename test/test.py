@@ -34,7 +34,7 @@ async def test_project(dut):
     dut._log.info("Test project behavior")
 
     # Set the input values you want to test
-    dut.ui_in.value = 0b00000001
+    dut.ui_in.value = 0b00000100
     for _ in range(500):
         await RisingEdge(dut.clk)
 
