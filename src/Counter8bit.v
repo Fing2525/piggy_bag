@@ -42,6 +42,7 @@ module Counter8bit(
 always @(posedge clk) begin
     if (reset) begin
         count <= 8'd0;
+        changing <= 1'b0;
         state <= WAIT;
     end 
     else begin
