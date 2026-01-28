@@ -98,12 +98,16 @@ module tt_um_piggy_top (
         .input2(change1),
         .input3(change2),
         .input4(change3),
+        .reset(reset),
+        .clk(clk),
         .output1(or4_out)
     );
 
     orgate_2input u_or2 (
         .input1(edge_out),
         .input2(or4_out),
+        .reset(reset),
+        .clk(clk),
         .output1(start_sending)
     );
 

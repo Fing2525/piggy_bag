@@ -23,9 +23,19 @@
 module orgate_2input(
     input   input1,
     input   input2,
-    output  output1
+    input   clk,
+    input   reset,
+    output reg output1
     );
     
-    assign output1 = input1 | input2;
+    always@(posedge clk) begin
+        if(reset)begin
+            output1 <= 0;
+        end
+        else begin
+            output1 <= input1 | input2;
+        
+        end
+    end
     
 endmodule

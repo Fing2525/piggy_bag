@@ -25,9 +25,19 @@ module orgate_4input(
     input   input2,
     input   input3,
     input   input4,
-    output  output1
+    input   reset,
+    input   clk,
+    output  reg output1
     );
     
-    assign output1 = input1 | input2 | input3 | input4;
     
+    always@(posedge clk) begin
+        if(reset)begin
+            output1 <= 0;
+        end
+        else begin
+            output1 <= input1 | input2 | input3 | input4;
+        
+        end
+    end
 endmodule
