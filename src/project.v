@@ -117,7 +117,7 @@ module tt_um_piggy_top (
     uart_tx_fsm u_uart (
         .clk(clk),
         .rst(reset),
-        .start_sending(or4_out),
+        .start_sending(start_sending),
 
         .tenbaht (ascii0),
         .fivebaht(ascii1),
