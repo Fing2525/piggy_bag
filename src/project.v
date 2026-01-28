@@ -23,7 +23,7 @@ module tt_um_piggy_top(
     debouncer u_deb (
         .clk   (clk),
         .rst_n (rst_n),
-        .Input (ui_in[0]),
+        .Input (ui_in[2]),
         .Output(deb_out)
     );
 
