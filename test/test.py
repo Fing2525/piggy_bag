@@ -6,7 +6,7 @@ from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge, ClockCycles
 
 UART_TX_BIT = 2
-CLK_PERIOD_NS = 10   # 100 MHz
+CLK_PERIOD_NS = 20   # 50 MHz
 
 
 def get_uart_tx(dut):
