@@ -56,7 +56,7 @@ async def test_project(dut):
     # Press button (debounced input)
     # ------------------------------------------------------------
     dut._log.info("Pressing button")
-    dut.ui_in.value = 0b00000100
+    dut.ui_in.value = 0b00010000
     await ClockCycles(dut.clk, 400_000)
 
     # ------------------------------------------------------------
