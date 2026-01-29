@@ -1,27 +1,140 @@
-/*
- * Copyright (c) 2024 Your Name
- * SPDX-License-Identifier: Apache-2.0
- */
+`timescale 1ns / 1ps
 
-`default_nettype none
-
-module tt_um_example (
-    input  wire [7:0] ui_in,    // Dedicated inputs
-    output wire [7:0] uo_out,   // Dedicated outputs
-    input  wire [7:0] uio_in,   // IOs: Input path
-    output wire [7:0] uio_out,  // IOs: Output path
-    output wire [7:0] uio_oe,   // IOs: Enable path (active high: 0=input, 1=output)
-    input  wire       ena,      // always 1 when the design is powered, so you can ignore it
-    input  wire       clk,      // clock
-    input  wire       rst_n     // reset_n - low to reset
+module tt_um_piggy_top (
+    input  wire [7:0] ui_in,
+    output wire [7:0] uo_out,
+    input  wire [7:0] uio_in,
+    output wire [7:0] uio_out,
+    output wire [7:0] uio_oe,
+    input  wire       clk,
+    input  wire       rst_n,
+    input  wire       ena
 );
 
-  // All output pins must be assigned. If not used, assign to 0.
-  assign uo_out  = ui_in + uio_in;  // Example: ou_out is the sum of ui_in and uio_in
-  assign uio_out = 0;
-  assign uio_oe  = 0;
 
-  // List all unused inputs to prevent warnings
-  wire _unused = &{ena, clk, rst_n, 1'b0};
+    // ------------------------------------------------------------
+    // Required: drive ALL outputs
+    // ------------------------------------------------------------
+    assign uio_out = 8'b0;
+    assign uio_oe  = 8'b0;
+
+    // ------------------------------------------------------------
+    // Silence unused input warning
+    // ------------------------------------------------------------
+    wire _unused_ena = ena;
+    wire _unused_uio = |uio_in;
+    // ------------------------------------------------------------
+
+    // ------------------------------------------------------------
+    // Input mapping (from Tiny Tapeout pins)
+    // ------------------------------------------------------------
+    wire Input_0 = ui_in[2];
+    wire Input_1 = ui_in[3];
+    wire Input_2 = ui_in[4];
+    wire Input_3 = ui_in[5];
+    wire LCD_0   = ui_in[6];
+
+    // active-low reset
+    wire reset = rst_n;
+
+    // ------------------------------------------------------------
+    // Internal wires
+    // ------------------------------------------------------------
+    wire [7:0] amount0, amount1, amount2, amount3;
+    wire change0, change1, change2, change3;
+
+    wire deb0, deb1, deb2, deb3, deb4;
+    wire edge_out;
+
+    wire [23:0] ascii0, ascii1, ascii2, ascii3;
+
+    wire or4_out;
+    wire start_sending;
+
+    wire o_Tx_Active;
+    wire o_Tx_Done;
+    wire o_Tx_Serial;
+
+    // ------------------------------------------------------------
+    // Debouncers
+    // ------------------------------------------------------------
+    debouncer u_deb0 (.clk(clk), .Input(LCD_0),  .Output(deb0), .rst_n(reset));
+    debouncer u_deb1 (.clk(clk), .Input(Input_0), .Output(deb1), .rst_n(reset));
+    debouncer u_deb2 (.clk(clk), .Input(Input_1), .Output(deb2), .rst_n(reset));
+    debouncer u_deb3 (.clk(clk), .Input(Input_2), .Output(deb3), .rst_n(reset));
+    debouncer u_deb4 (.clk(clk), .Input(Input_3), .Output(deb4), .rst_n(reset));
+
+    // ------------------------------------------------------------
+    // Counters
+    // ------------------------------------------------------------
+    Counter8bit u_cnt0 (.clk(clk), .reset(reset), .coin(deb0), .amount(amount0), .change(change0));
+    Counter8bit u_cnt1 (.clk(clk), .reset(reset), .coin(deb1), .amount(amount1), .change(change1));
+    Counter8bit u_cnt2 (.clk(clk), .reset(reset), .coin(deb2), .amount(amount2), .change(change2));
+    Counter8bit u_cnt3 (.clk(clk), .reset(reset), .coin(deb3), .amount(amount3), .change(change3));
+
+    // ------------------------------------------------------------
+    // Edge detector
+    // ------------------------------------------------------------
+    edge_detector u_edge (
+        .clk(clk),
+        .rst(reset),
+        .Input(deb4),
+        .Output(edge_out)
+    );
+
+    // ------------------------------------------------------------
+    // Num to ASCII
+    // ------------------------------------------------------------
+    numtoascii u_n2a0 (.clk(clk), .num(amount0), .ascii(ascii0));
+    numtoascii u_n2a1 (.clk(clk), .num(amount1), .ascii(ascii1));
+    numtoascii u_n2a2 (.clk(clk), .num(amount2), .ascii(ascii2));
+    numtoascii u_n2a3 (.clk(clk), .num(amount3), .ascii(ascii3));
+
+    // ------------------------------------------------------------
+    // OR logic
+    // ------------------------------------------------------------
+    orgate_4input u_or4 (
+        .input1(change0),
+        .input2(change1),
+        .input3(change2),
+        .input4(change3),
+        .reset(reset),
+        .clk(clk),
+        .output1(or4_out)
+    );
+
+    orgate_2input u_or2 (
+        .input1(edge_out),
+        .input2(or4_out),
+        .reset(reset),
+        .clk(clk),
+        .output1(start_sending)
+    );
+
+    // ------------------------------------------------------------
+    // UART TX FSM
+    // ------------------------------------------------------------
+    uart_tx_fsm u_uart (
+        .clk(clk),
+        .rst(reset),
+        .start_sending(start_sending),
+
+        .tenbaht (ascii0),
+        .fivebaht(ascii1),
+        .twobaht (ascii2),
+        .onebaht (ascii3),
+
+        .o_Tx_Active (o_Tx_Active),
+        .o_Tx_Done   (o_Tx_Done),
+        .o_Tx_Serial (o_Tx_Serial)
+    );
+
+    // ------------------------------------------------------------
+    // Output mapping (to Tiny Tapeout pins)
+    // ------------------------------------------------------------
+    assign uo_out[0] = o_Tx_Active;
+    assign uo_out[1] = o_Tx_Done;
+    assign uo_out[2] = o_Tx_Serial;
+    assign uo_out[7:3] = 5'b0;
 
 endmodule
